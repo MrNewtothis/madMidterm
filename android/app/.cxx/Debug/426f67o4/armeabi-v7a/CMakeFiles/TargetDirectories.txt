@@ -1,0 +1,2 @@
+E:/Documents/School/2nd Sem/MAD 2/MTR/mtr_puzzle/android/app/.cxx/Debug/426f67o4/armeabi-v7a/CMakeFiles/edit_cache.dir
+E:/Documents/School/2nd Sem/MAD 2/MTR/mtr_puzzle/android/app/.cxx/Debug/426f67o4/armeabi-v7a/CMakeFiles/rebuild_cache.dir
