@@ -7,6 +7,8 @@ import 'package:gap/gap.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'choosepic_easy.dart';
+
 class PictureEasyMode extends StatefulWidget {
   final int pictureIndex3;
 
@@ -49,28 +51,63 @@ class _PictureEasyModeState extends State<PictureEasyMode> {
     });
   }
 
+  // Function to initialize and shuffle the puzzle
   void initPuzzle() {
+    // Create a list of numbers from 0 to 8, representing puzzle tiles.
+    // Each number corresponds to a piece of the puzzle.
     puzzle = List.generate(9, (index) => index);
-    // Predefined number of random moves
+
+    // Shuffle the puzzle using a predefined number of random moves.
+    // This ensures the puzzle starts in a solvable, shuffled state.
     for (int i = 0; i < 25; i++) {
+      // Find the index of the empty tile (represented by the number 8).
       int emptyIndex = puzzle.indexOf(8);
+
+      // Create a list to store possible moves (tiles that can be swapped with the empty space).
       List<int> possibleMoves = [];
+
+      // If the empty tile is not in the first column, it can move left.
       if (emptyIndex % 3 != 0) possibleMoves.add(emptyIndex - 1); // Left
+
+      // If the empty tile is not in the last column, it can move right.
       if ((emptyIndex + 1) % 3 != 0) possibleMoves.add(emptyIndex + 1); // Right
+
+      // If the empty tile is not in the first row, it can move up.
       if (emptyIndex - 3 >= 0) possibleMoves.add(emptyIndex - 3); // Up
+
+      // If the empty tile is not in the last row, it can move down.
       if (emptyIndex + 3 < 9) possibleMoves.add(emptyIndex + 3); // Down
+
+      // Select a random tile from the possible moves to swap with the empty tile.
       int randomMove = possibleMoves[Random().nextInt(possibleMoves.length)];
+
+      // Swap the empty tile with the selected tile to create a shuffled puzzle.
       swapTiles(emptyIndex, randomMove);
     }
+
+    // Reset the move counter to 0 because the game is starting fresh.
     moves = 0;
+
+    // Mark the puzzle as incomplete since it was just shuffled.
     isCompleted = false;
-    tileInPosition = List.filled(9, false); // Initialized all tiles to false
+
+    // Create a list to track whether each tile is in its correct position.
+    // Initially, all tiles are marked as incorrect (false).
+    tileInPosition = List.filled(9, false);
+
+    // Update the `tileInPosition` list to check which tiles are in the correct spot.
     updateTileInPosition();
   }
 
+  // Function to save the best score for the completed puzzle
   Future<void> completePuzzle() async {
+    // Access shared preferences to store game data
     sharedPreferences = await SharedPreferences.getInstance();
+
+    // Generate a unique key for storing the best score of the current puzzle image
     var bestScoreKey2 = '_easypic${widget.pictureIndex3}BestScore';
+
+    // If there is no saved score OR the current move count is lower, update the best score
     if (!sharedPreferences.containsKey(bestScoreKey2) ||
         moves < sharedPreferences.getInt(bestScoreKey2)!) {
       await sharedPreferences.setInt(bestScoreKey2, moves);
@@ -237,30 +274,36 @@ class _PictureEasyModeState extends State<PictureEasyMode> {
   }
 
   void moveTile(int index) {
-    if (puzzle[index] == 8) return;
+    if (puzzle[index] == 8)
+      return; // If the tapped tile is the empty space, do nothing
 
-    int emptyIndex = puzzle.indexOf(8);
-    List<int> possibleMoves = [];
-    if (emptyIndex % 3 != 0) possibleMoves.add(emptyIndex - 1); // Left
-    if ((emptyIndex + 1) % 3 != 0) possibleMoves.add(emptyIndex + 1); // Right
-    if (emptyIndex - 3 >= 0) possibleMoves.add(emptyIndex - 3); // Up
-    if (emptyIndex + 3 < 9) possibleMoves.add(emptyIndex + 3); // Down
+    int emptyIndex =
+        puzzle.indexOf(8); // Find the current position of the empty tile
+
+    List<int> possibleMoves = []; // List to store valid moves
+    if (emptyIndex % 3 != 0) possibleMoves.add(emptyIndex - 1); // Left move
+    if ((emptyIndex + 1) % 3 != 0)
+      possibleMoves.add(emptyIndex + 1); // Right move
+    if (emptyIndex - 3 >= 0) possibleMoves.add(emptyIndex - 3); // Up move
+    if (emptyIndex + 3 < 9) possibleMoves.add(emptyIndex + 3); // Down move
 
     if (!possibleMoves.contains(index)) {
-      playAudio('assets/Not Movable.wav');
-      return;
+      // Check if the selected tile can move
+      playAudio('assets/Not Movable.wav'); // Play "not movable" sound
+      return; // Exit the function if the move is invalid
     }
 
-    playAudio('assets/Tile Move.wav');
+    playAudio('assets/Tile Move.wav'); // Play tile move sound effect
 
-    swapTiles(index, emptyIndex);
-    updateTileInPosition();
+    swapTiles(index, emptyIndex); // Swap the tapped tile with the empty tile
+    updateTileInPosition(); // Update the tile positions
 
     if (!isSolved()) {
-      moves++;
+      // Check if the puzzle is solved
+      moves++; // Increase move count if not yet solved
     } else {
-      isCompleted = true;
-      completePuzzle();
+      isCompleted = true; // Mark puzzle as completed
+      completePuzzle(); // Save best score if applicable
     }
   }
 
@@ -277,72 +320,95 @@ class _PictureEasyModeState extends State<PictureEasyMode> {
   }
 
   void swapTiles(int index1, int index2) {
-    int temp = puzzle[index1];
-    puzzle[index1] = puzzle[index2];
-    puzzle[index2] = temp;
-  }
+    int temp =
+        puzzle[index1]; // Store the first tile value in a temporary variable.
+    puzzle[index1] = puzzle[
+        index2]; // Swap: Assign the second tile's value to the first tile.
+    puzzle[index2] =
+        temp; // Swap: Assign the original first tile's value to the second tile.
+  } // This function swaps two tiles in the puzzle.
 
   bool isSolved() {
     for (int i = 0; i < 9; i++) {
+      // Loop through all tiles (0 to 8).
       if (puzzle[i] != i) {
-        return false;
+        // If any tile is not in its correct position...
+        return false; // The puzzle is not solved.
       }
     }
-    return true;
-  }
+    return true; // If all tiles are in the correct order, the puzzle is solved.
+  } // This function checks if all tiles are in their correct positions.
 
   void updateTileInPosition() {
-    bool allTilesInPosition = true;
+    bool allTilesInPosition =
+        true; // Assume all tiles are in position by default.
+
     for (int i = 0; i < 9; i++) {
+      // Loop through all 9 tiles.
       if (puzzle[i] != i) {
-        allTilesInPosition = false;
+        // If a tile is not in its correct position...
+        allTilesInPosition =
+            false; // Mark that not all tiles are correctly placed.
       }
+
       if (puzzle[i] == i) {
-        tileInPosition[i] = true;
+        // If the tile is in its correct position...
+        tileInPosition[i] = true; // Mark this tile as correctly placed.
       } else {
-        tileInPosition[i] = false;
+        tileInPosition[i] = false; // Otherwise, mark it as misplaced.
       }
     }
+
     if (allTilesInPosition) {
-      showSuccessDialog();
+      // If all tiles are in the correct position...
+      showSuccessDialog(); // Display the success message.
     }
-  }
+  } // This function checks if each tile is correctly placed and updates the status.
 
   void showSuccessDialog() async {
-    showFullSizeImage();
-    audioPlayer.setAsset('assets/Choir Harp Bless.wav');
-    await audioPlayer.play();
-    final int currentTime = secondsElapsed;
-    timer.cancel();
+    showFullSizeImage(); // Show the full image of the completed puzzle.
+
+    audioPlayer
+        .setAsset('assets/Choir Harp Bless.wav'); // Load the success sound.
+    await audioPlayer.play(); // Play the success sound.
+
+    final int currentTime = secondsElapsed; // Store the elapsed time.
+    timer.cancel(); // Stop the timer since the puzzle is completed.
+
     showDialog(
+      // Show a popup dialog to congratulate the player.
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Congratulations!"),
-          content:
-              Text("You solved the puzzle!\nTime: ${formatTime(currentTime)}"),
+          // Create an alert dialog.
+          title: const Text(
+              "Congratulations!"), // Display a congratulatory message.
+          content: Text(
+              "You solved the puzzle!\nTime: ${formatTime(currentTime)}"), // Show the completion time.
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(context)
+                    .pop(); // Close the dialog when "Quit" is pressed.
               },
               child: const Text("Quit"),
             ),
             TextButton(
               onPressed: () async {
-                Navigator.of(context).pop();
-                initPuzzle(); // Restart the puzzle
-                resetTimer(); // Reset the timer
-                await audioPlayer.setAsset('assets/Shuffle-Reset.wav');
-                await audioPlayer.play();
+                Navigator.of(context).pop(); // Close the dialog.
+                initPuzzle(); // Restart the puzzle.
+                resetTimer(); // Reset the timer.
+                await audioPlayer.setAsset(
+                    'assets/Shuffle-Reset.wav'); // Load the shuffle/reset sound.
+                await audioPlayer.play(); // Play the shuffle/reset sound.
               },
-              child: const Text("Restart"),
+              child: const Text("Restart"), // Button to restart the game.
             ),
           ],
         );
       },
     );
-  }
+  } // This function shows a success message, plays a sound, and offers restart options.
 
   void resetTimer() {
     timer.cancel(); // Cancel the current timer
@@ -424,7 +490,11 @@ class _PictureEasyModeState extends State<PictureEasyMode> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => ChoosePicEasyScreen(),
+                ));
+                setState(() {});
+                // Navigator.of(context).pop(); // Close the dialog
               },
               child: const Text("No"),
             ),
