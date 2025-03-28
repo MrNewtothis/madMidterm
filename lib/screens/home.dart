@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mtr_puzzle/screens/about.dart';
-import 'package:mtr_puzzle/screens/chooselev.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:just_audio/just_audio.dart';
+import 'package:mtr_puzzle/screens/about.dart'; // Importing the About Screen
+import 'package:mtr_puzzle/screens/chooselev.dart'; // Importing the Choose Level Screen
+import 'package:shared_preferences/shared_preferences.dart'; // Used to store best score locally
+import 'package:just_audio/just_audio.dart'; // Library for playing audio files
 
+// The main game screen of the Pindot Puzzler Game
 class PuzzleGame extends StatefulWidget {
   const PuzzleGame({Key? key}) : super(key: key);
 
@@ -11,71 +12,86 @@ class PuzzleGame extends StatefulWidget {
   State<PuzzleGame> createState() => _PuzzleAppState();
 }
 
+// State class to manage the UI and functionality of the game
 class _PuzzleAppState extends State<PuzzleGame> {
-  late int bestScore = -1;
-  late AudioPlayer audioPlayer;
-  bool isMuted = false;
-  bool audioLoaded = false;
-  bool isHovered = false;
+  late int bestScore =
+      -1; // Variable to store the best score, initialized to -1
+  late AudioPlayer audioPlayer; // Audio player instance for background music
+  bool isMuted = false; // Flag to check if the sound is muted
+  bool audioLoaded =
+      false; // Flag to check if audio has been successfully loaded
+  bool isHovered = false; // Flag to check if the play button is being hovered
 
   @override
   void initState() {
     super.initState();
-    loadBestScore();
-    initAudioPlayer();
+    loadBestScore(); // Load best score from local storage
+    initAudioPlayer(); // Initialize the audio player
   }
 
+  // Load the best score stored in local storage
   Future<void> loadBestScore() async {
-    SharedPreferences sp = await SharedPreferences.getInstance();
+    SharedPreferences sp =
+        await SharedPreferences.getInstance(); // Get SharedPreferences instance
     setState(() {
-      bestScore = sp.getInt('bestScore') ?? -1;
+      bestScore = sp.getInt('bestScore') ??
+          -1; // Retrieve best score, or set to -1 if not found
     });
   }
 
+  // Initialize the audio player and load background music
   Future<void> initAudioPlayer() async {
-    audioPlayer = AudioPlayer();
+    audioPlayer = AudioPlayer(); // Create a new AudioPlayer instance
     try {
-      await audioPlayer.setAsset('Home.mp3');
-      await audioPlayer.setLoopMode(LoopMode.one);
+      await audioPlayer.setAsset('Home.mp3'); // Load the audio file from assets
+      await audioPlayer
+          .setLoopMode(LoopMode.one); // Set the music to loop continuously
       setState(() {
-        audioLoaded = true;
+        audioLoaded = true; // Mark audio as successfully loaded
       });
     } catch (error) {
-      print('Error loading audio: $error');
+      print(
+          'Error loading audio: $error'); // Print an error message if the audio fails to load
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar:
+          true, // Allows content to extend behind the app bar
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0.0,
+        backgroundColor: Colors.transparent, // Makes the app bar transparent
+        elevation: 0.0, // Removes shadow from the app bar
         title: const Text(
-          'PINDOT PUZZLER GAME',
+          'PINDOT PUZZLER GAME', // Title displayed at the top
         ),
-        centerTitle: true,
+        centerTitle: true, // Centers the title in the app bar
         actions: [
           IconButton(
-            onPressed: navigateToAboutScreen,
-            icon: const Icon(Icons.help_outline_outlined),
+            onPressed:
+                navigateToAboutScreen, // Navigate to About screen when clicked
+            icon: const Icon(Icons.help_outline_outlined), // Help icon button
           ),
           IconButton(
-            onPressed: toggleMute,
-            icon: Icon(isMuted ? Icons.volume_off : Icons.volume_up),
+            onPressed: toggleMute, // Toggle mute when clicked
+            icon: Icon(isMuted
+                ? Icons.volume_off
+                : Icons.volume_up), // Mute/Unmute icon
           ),
         ],
       ),
       body: Stack(
         children: [
+          // Background Image for the game screen
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: const AssetImage('assets/images/image1.jpg'),
-                fit: BoxFit.cover,
+                image: const AssetImage(
+                    'assets/images/image1.jpg'), // Set background image
+                fit: BoxFit.cover, // Cover entire screen with the image
                 colorFilter: ColorFilter.mode(
-                  Colors.black.withOpacity(0.2),
+                  Colors.black.withOpacity(0.2), // Darken the image slightly
                   BlendMode.dstATop,
                 ),
               ),
@@ -83,41 +99,45 @@ class _PuzzleAppState extends State<PuzzleGame> {
           ),
           SafeArea(
             child: GestureDetector(
-              onTap: playAudio,
-              onTapCancel: stopAudio,
+              onTap: playAudio, // Play audio when the screen is tapped
+              onTapCancel: stopAudio, // Stop audio if tap is canceled
               child: Center(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Image.asset(
-                      'assets/images/icon.png',
+                      'assets/images/icon.png', // Game logo
                       height: 350,
                       width: 400,
                     ),
                     MouseRegion(
                       onEnter: (_) {
                         setState(() {
-                          isHovered = true;
+                          isHovered = true; // When mouse hovers over the button
                         });
                       },
                       onExit: (_) {
                         setState(() {
-                          isHovered = false;
+                          isHovered = false; // When mouse leaves the button
                         });
                       },
                       child: AnimatedContainer(
-                        duration: Duration(milliseconds: 100),
-                        width: isHovered ? 220 : 200,
+                        duration:
+                            Duration(milliseconds: 100), // Animation duration
+                        width:
+                            isHovered ? 220 : 200, // Increase size when hovered
                         height: isHovered ? 70 : 60,
                         child: ElevatedButton(
-                          onPressed: chooseLevelScreen,
+                          onPressed:
+                              chooseLevelScreen, // Navigate to level selection screen
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                            foregroundColor: Colors.white,
-                            elevation: 5,
+                            backgroundColor: Colors.blueAccent, // Button color
+                            foregroundColor: Colors.white, // Text color
+                            elevation: 5, // Button shadow
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.0),
+                              borderRadius: BorderRadius.circular(
+                                  10.0), // Rounded corners
                             ),
                           ),
                           child: const SizedBox(
@@ -126,14 +146,15 @@ class _PuzzleAppState extends State<PuzzleGame> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.play_arrow),
-                                const SizedBox(width: 8),
+                                Icon(Icons.play_arrow), // Play icon
+                                SizedBox(
+                                    width: 8), // Spacing between icon and text
                                 Text(
-                                  'PLAY',
+                                  'PLAY', // Button text
                                   style: TextStyle(
-                                    fontFamily: 'Manrope',
-                                    fontSize: 20.0,
-                                    color: Colors.white,
+                                    fontFamily: 'Manrope', // Custom font
+                                    fontSize: 20.0, // Font size
+                                    color: Colors.white, // Text color
                                   ),
                                 ),
                               ],
@@ -154,12 +175,14 @@ class _PuzzleAppState extends State<PuzzleGame> {
 
   @override
   void dispose() {
-    audioPlayer.dispose();
+    audioPlayer
+        .dispose(); // Dispose of the audio player when the screen is closed
     super.dispose();
   }
 
+  // Navigate to level selection screen
   void chooseLevelScreen() {
-    playAudio();
+    playAudio(); // Play click sound
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (BuildContext context) => ChooseLevelScreen(
@@ -170,8 +193,9 @@ class _PuzzleAppState extends State<PuzzleGame> {
     );
   }
 
+  // Navigate to the About screen
   void navigateToAboutScreen() {
-    playAudio();
+    playAudio(); // Play click sound
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (BuildContext context) => AboutScreen(
@@ -182,25 +206,28 @@ class _PuzzleAppState extends State<PuzzleGame> {
     );
   }
 
+  // Play audio if it's not muted
   void playAudio() async {
     if (!audioLoaded) {
-      await initAudioPlayer();
+      await initAudioPlayer(); // Load audio if not already loaded
     }
     try {
-      await audioPlayer.play();
+      await audioPlayer.play(); // Play the audio file
     } catch (e) {
-      print('Error playing audio: $e');
+      print('Error playing audio: $e'); // Print an error message if audio fails
     }
   }
 
+  // Stop playing audio
   void stopAudio() {
     audioPlayer.stop();
   }
 
+  // Toggle mute functionality
   void toggleMute() {
     setState(() {
-      isMuted = !isMuted;
-      audioPlayer.setVolume(isMuted ? 0 : 1);
+      isMuted = !isMuted; // Change mute status
+      audioPlayer.setVolume(isMuted ? 0 : 1); // Set volume accordingly
     });
   }
 }
